@@ -136,7 +136,10 @@ function encodePng(rgb: Uint8Array, w: number, h: number): Buffer {
 }
 
 // ---------------------------------------------------------------- 5x7 font
-// Each glyph is 7 rows; each row is a 5-bit mask, bit 4 = leftmost pixel.
+// Each glyph is GLYPH_H rows; each row is a GLYPH_W-bit mask, bit 4 = leftmost pixel.
+const GLYPH_W = 5;
+const GLYPH_H = 7;
+const GLYPH_ADVANCE = GLYPH_W + 1; // glyph width plus one pixel of spacing
 const GLYPHS: Record<string, number[]> = {
   A: [14, 17, 17, 31, 17, 17, 17],
   B: [30, 17, 17, 30, 17, 17, 30],
@@ -231,16 +234,16 @@ function glyphOf(ch: string): number[] {
   return GLYPHS[ch] ?? GLYPHS['?'];
 }
 function charW(s: number): number {
-  return 6 * s;
+  return GLYPH_ADVANCE * s;
 }
 function strW(str: string, s: number): number {
   return str.length === 0 ? 0 : str.length * charW(s) - s;
 }
 function drawChar(ch: string, x: number, y: number, s: number, c: RGB): void {
   const g = glyphOf(ch);
-  for (let r = 0; r < 7; r++) {
-    for (let col = 0; col < 5; col++) {
-      if ((g[r] >> (4 - col)) & 1) box(x + col * s, y + r * s, s, s, c);
+  for (let r = 0; r < GLYPH_H; r++) {
+    for (let col = 0; col < GLYPH_W; col++) {
+      if ((g[r] >> (GLYPH_W - 1 - col)) & 1) box(x + col * s, y + r * s, s, s, c);
     }
   }
 }
